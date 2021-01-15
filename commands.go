@@ -115,10 +115,6 @@ to execute when the command is called
 type CmdInitializer func(*Cmd)
 
 func (c *Cmd) Model() model.Command {
-	if err := c.doInit(); err != nil {
-		panic(err)
-	}
-
 	res := model.Command{
 		Name:      c.name,
 		Aliases:   c.aliases,
