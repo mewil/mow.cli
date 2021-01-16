@@ -566,10 +566,6 @@ func (c *Cmd) printHelp(longDesc bool) {
 
 	commands := make([]*Cmd, 0, len(c.commands))
 	for _, c := range c.commands {
-		if err := c.doInit(); err != nil {
-			panic(err)
-		}
-
 		if c.Hidden {
 			continue
 		}
