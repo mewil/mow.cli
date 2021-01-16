@@ -537,14 +537,14 @@ func (c *Cmd) doInit() error {
 func (c *Cmd) onError(err error) {
 	if err == errHelpRequested || err == errVersionRequested {
 		if c.ErrorHandling == flag.ExitOnError {
-			exiter(0)
+			noop(0)
 		}
 		return
 	}
 
 	switch c.ErrorHandling {
 	case flag.ExitOnError:
-		exiter(2)
+		noop(2)
 	case flag.PanicOnError:
 		panic(err)
 	}
@@ -685,6 +685,19 @@ func formatEnvVarsForHelp(envVars string) string {
 	return res
 }
 
+func (c *Cmd) Init() {
+	c.doInit()
+	for _, sub := range c.commands {
+		sub.Init()
+	}
+}
+
+func (c *Cmd) Exec(args []string) error {
+	inFlow := &flow.Step{Desc: "RootIn", Exiter: func(n int) {}}
+	outFlow := &flow.Step{Desc: "RootOut", Exiter: func(n int) {}}
+	return c.parse(args, inFlow, inFlow, outFlow)
+}
+
 func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	if c.helpRequested(args) {
 		c.PrintLongHelp()
@@ -705,7 +718,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 		Do:     c.Before,
 		Error:  outFlow,
 		Desc:   fmt.Sprintf("%s.Before", c.name),
-		Exiter: exiter,
+		Exiter: noop,
 	}
 	inFlow.Success = newInFlow
 
@@ -714,7 +727,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 		Success: outFlow,
 		Error:   outFlow,
 		Desc:    fmt.Sprintf("%s.After", c.name),
-		Exiter:  exiter,
+		Exiter:  noop,
 	}
 
 	args = args[nargsLen:]
@@ -725,7 +738,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 				Success: newOutFlow,
 				Error:   newOutFlow,
 				Desc:    fmt.Sprintf("%s.Action", c.name),
-				Exiter:  exiter,
+				Exiter:  noop,
 			}
 
 			entry.Run(nil)
@@ -739,9 +752,6 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	arg := args[0]
 	for _, sub := range c.commands {
 		if sub.isAlias(arg) {
-			if err := sub.doInit(); err != nil {
-				panic(err)
-			}
 			return sub.parse(args[1:], entry, newInFlow, newOutFlow)
 		}
 	}

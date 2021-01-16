@@ -113,8 +113,8 @@ func (cli *Cli) Run(args []string) error {
 	if err := cli.doInit(); err != nil {
 		panic(err)
 	}
-	inFlow := &flow.Step{Desc: "RootIn", Exiter: exiter}
-	outFlow := &flow.Step{Desc: "RootOut", Exiter: exiter}
+	inFlow := &flow.Step{Desc: "RootIn", Exiter: noop}
+	outFlow := &flow.Step{Desc: "RootOut", Exiter: noop}
 	return cli.parse(args[1:], inFlow, inFlow, outFlow)
 }
 
@@ -137,9 +137,7 @@ func Exit(code int) {
 	panic(flow.ExitCode(code))
 }
 
-var exiter = func(code int) {
-	os.Exit(code)
-}
+var noop = func(code int) {}
 
 var (
 	stdOut io.Writer = os.Stdout

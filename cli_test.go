@@ -2218,20 +2218,20 @@ func TestBeforeAndAfterFlowOrderWhenMultipleAftersPanic(t *testing.T) {
 }
 
 func exitShouldBeCalledWith(t *testing.T, wantedExitCode int, called *bool) func() {
-	oldExiter := exiter
-	exiter = func(code int) {
+	oldExiter := noop
+	noop = func(code int) {
 		require.Equal(t, wantedExitCode, code, "unwanted exit code")
 		*called = true
 	}
-	return func() { exiter = oldExiter }
+	return func() { noop = oldExiter }
 }
 
 func exitShouldNotCalled(t *testing.T) func() {
-	oldExiter := exiter
-	exiter = func(code int) {
+	oldExiter := noop
+	noop = func(code int) {
 		t.Errorf("exit should not have been called")
 	}
-	return func() { exiter = oldExiter }
+	return func() { noop = oldExiter }
 }
 
 func suppressOutput() func() {
