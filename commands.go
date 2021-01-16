@@ -570,29 +570,15 @@ func (c *Cmd) PrintLongHelp() {
 }
 
 func (c *Cmd) printHelp(longDesc bool) {
-	full := append(c.parents, c.name)
-	path := strings.Join(full, " ")
-	fmt.Fprintf(stdErr, "\nUsage: %s", path)
-
-	spec := strings.TrimSpace(c.Spec)
-	if len(spec) > 0 {
-		fmt.Fprintf(stdErr, " %s", spec)
-	}
-
-	if len(c.commands) > 0 {
-		fmt.Fprint(stdErr, " COMMAND [arg...]")
-	}
-	fmt.Fprint(stdErr, "\n\n")
-
 	desc := c.desc
 	if longDesc && len(c.LongDesc) > 0 {
 		desc = c.LongDesc
 	}
 	if len(desc) > 0 {
-		fmt.Fprintf(stdErr, "%s\n", desc)
+		fmt.Fprintf(stdOut, "%s\n", desc)
 	}
 
-	w := tabwriter.NewWriter(stdErr, 15, 1, 3, ' ', 0)
+	w := tabwriter.NewWriter(stdOut, 15, 1, 3, ' ', 0)
 
 	if len(c.args) > 0 {
 		fmt.Fprint(w, "\t\nArguments:\t\n")
@@ -637,7 +623,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 	}
 
 	if len(commands) > 0 {
-		fmt.Fprintf(w, "\t\nRun '%s COMMAND --help' for more information on a command.\n", path)
+		fmt.Fprintf(w, "\t\nRun 'COMMAND --help' for more information on a command.\n\n")
 	}
 
 	w.Flush()
