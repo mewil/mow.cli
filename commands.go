@@ -50,6 +50,9 @@ type Cmd struct {
 	parents []string
 
 	fsm *fsm.State
+
+	stdOut io.Writer
+	stdErr io.Writer
 }
 
 /*
@@ -193,6 +196,8 @@ func (c *Cmd) Command(name, desc string, init CmdInitializer) {
 		optionsIdx:    map[string]*container.Container{},
 		args:          []*container.Container{},
 		argsIdx:       map[string]*container.Container{},
+		stdOut:        c.stdOut,
+		stdErr:        c.stdErr,
 	})
 }
 
@@ -575,10 +580,10 @@ func (c *Cmd) printHelp(longDesc bool) {
 		desc = c.LongDesc
 	}
 	if len(desc) > 0 {
-		fmt.Fprintf(stdOut, "%s\n", desc)
+		fmt.Fprintf(c.stdOut, "%s\n", desc)
 	}
 
-	w := tabwriter.NewWriter(stdOut, 15, 1, 3, ' ', 0)
+	w := tabwriter.NewWriter(c.stdOut, 15, 1, 3, ' ', 0)
 
 	if len(c.args) > 0 {
 		fmt.Fprint(w, "\t\nArguments:\t\n")
@@ -708,7 +713,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	nargsLen := c.getOptsAndArgs(args)
 
 	if err := c.fsm.Parse(args[:nargsLen]); err != nil {
-		fmt.Fprintf(stdErr, "Error: %s\n", err.Error())
+		fmt.Fprintf(c.stdErr, "Error: %s\n", err.Error())
 		c.PrintHelp()
 		c.onError(err)
 		return err
@@ -760,10 +765,10 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *flow.Step) error {
 	switch {
 	case strings.HasPrefix(arg, "-"):
 		err = fmt.Errorf("Error: illegal option %s", arg)
-		fmt.Fprintln(stdErr, err.Error())
+		fmt.Fprintln(c.stdErr, err.Error())
 	default:
 		err = fmt.Errorf("Error: illegal input %s", arg)
-		fmt.Fprintln(stdErr, err.Error())
+		fmt.Fprintln(c.stdErr, err.Error())
 	}
 	c.PrintHelp()
 	c.onError(err)

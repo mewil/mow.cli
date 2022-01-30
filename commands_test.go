@@ -17,8 +17,6 @@ import (
 )
 
 func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
-	defer suppressOutput()()
-
 	cmd := &Cmd{
 		name:       "test",
 		optionsIdx: map[string]*container.Container{},
@@ -37,8 +35,6 @@ func okCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
 }
 
 func failCmd(t *testing.T, spec string, init CmdInitializer, args []string) {
-	defer suppressOutput()()
-
 	cmd := &Cmd{
 		name:       "test",
 		optionsIdx: map[string]*container.Container{},

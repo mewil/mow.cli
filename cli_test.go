@@ -754,7 +754,6 @@ func TestAppWithFloats64Arg(t *testing.T) {
 
 func testHelpAndVersionWithOptionsEnd(flag string, t *testing.T) {
 	t.Logf("Testing help/version with --: flag=%q", flag)
-	defer suppressOutput()()
 
 	exitCalled := false
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
@@ -809,8 +808,7 @@ func TestHelpMessage(t *testing.T) {
 		cas := cas
 		t.Run(cas.name, func(t *testing.T) {
 			t.Logf("case: %+v", cas)
-			var out, stdErr string
-			defer captureAndRestoreOutput(&out, &stdErr)()
+			var stdErr string
 			defer setAndRestoreEnv(cas.env)()
 
 			exitCalled := false
@@ -896,8 +894,7 @@ func TestHelpMessage(t *testing.T) {
 }
 
 func TestLongHelpMessage(t *testing.T) {
-	var out, err string
-	defer captureAndRestoreOutput(&out, &err)()
+	var err string
 
 	exitCalled := false
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
@@ -925,8 +922,7 @@ func TestLongHelpMessage(t *testing.T) {
 }
 
 func TestMultiLineDescInHelpMessage(t *testing.T) {
-	var out, err string
-	defer captureAndRestoreOutput(&out, &err)()
+	var err string
 
 	exitCalled := false
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
@@ -955,7 +951,6 @@ func TestMultiLineDescInHelpMessage(t *testing.T) {
 }
 
 func TestVersionShortcut(t *testing.T) {
-	defer suppressOutput()()
 	exitCalled := false
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
 
@@ -999,7 +994,6 @@ func TestSubCommands(t *testing.T) {
 
 func TestContinueOnError(t *testing.T) {
 	defer exitShouldNotCalled(t)()
-	defer suppressOutput()()
 
 	app := App("say", "")
 	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
@@ -1017,7 +1011,6 @@ func TestContinueOnError(t *testing.T) {
 
 func TestContinueOnErrorWithHelpAndVersion(t *testing.T) {
 	defer exitShouldNotCalled(t)()
-	defer suppressOutput()()
 
 	app := App("say", "")
 	app.Version("v", "1.0")
@@ -1043,7 +1036,6 @@ func TestContinueOnErrorWithHelpAndVersion(t *testing.T) {
 }
 
 func TestExitOnError(t *testing.T) {
-	defer suppressOutput()()
 
 	exitCalled := false
 	defer exitShouldBeCalledWith(t, 2, &exitCalled)()
@@ -1060,7 +1052,6 @@ func TestExitOnError(t *testing.T) {
 }
 
 func TestExitOnErrorWithHelp(t *testing.T) {
-	defer suppressOutput()()
 
 	exitCalled := false
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
@@ -1077,7 +1068,6 @@ func TestExitOnErrorWithHelp(t *testing.T) {
 }
 
 func TestExitOnErrorWithVersion(t *testing.T) {
-	defer suppressOutput()()
 
 	exitCalled := false
 	defer exitShouldBeCalledWith(t, 0, &exitCalled)()
@@ -1095,7 +1085,6 @@ func TestExitOnErrorWithVersion(t *testing.T) {
 }
 
 func TestPanicOnError(t *testing.T) {
-	defer suppressOutput()()
 
 	app := App("say", "")
 	app.String(StringOpt{Name: "f", Value: "", Desc: ""})
@@ -2005,8 +1994,6 @@ func TestCommandAction(t *testing.T) {
 }
 
 func TestCommandAliases(t *testing.T) {
-	defer suppressOutput()()
-
 	cases := []struct {
 		args          []string
 		errorExpected bool
@@ -2234,10 +2221,6 @@ func exitShouldNotCalled(t *testing.T) func() {
 	return func() { noop = oldExiter }
 }
 
-func suppressOutput() func() {
-	return captureAndRestoreOutput(nil, nil)
-}
-
 func setAndRestoreEnv(env map[string]string) func() {
 	backup := map[string]string{}
 	for k, v := range env {
@@ -2249,34 +2232,6 @@ func setAndRestoreEnv(env map[string]string) func() {
 		for k, v := range backup {
 			os.Setenv(k, v)
 		}
-	}
-}
-
-func captureAndRestoreOutput(out, err *string) func() {
-	oldStdOut := stdOut
-	oldStdErr := stdErr
-
-	if out == nil {
-		stdOut = ioutil.Discard
-	} else {
-		stdOut = trapWriter(out)
-	}
-	if err == nil {
-		stdErr = ioutil.Discard
-	} else {
-		stdErr = trapWriter(err)
-	}
-
-	return func() {
-		stdOut = oldStdOut
-		stdErr = oldStdErr
-	}
-}
-
-func trapWriter(writeTo *string) *writerTrap {
-	return &writerTrap{
-		buffer:  bytes.NewBuffer(nil),
-		writeTo: writeTo,
 	}
 }
 

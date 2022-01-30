@@ -35,6 +35,10 @@ name and description will be used to construct the help message for the app:
 
 */
 func App(name, desc string) *Cli {
+	return AppWithRedirect(name, desc, os.Stdout, os.Stderr)
+}
+
+func AppWithRedirect(name, desc string, stdOut, stdErr io.Writer) *Cli {
 	return &Cli{
 		Cmd: &Cmd{
 			name:          name,
@@ -42,6 +46,8 @@ func App(name, desc string) *Cli {
 			optionsIdx:    map[string]*container.Container{},
 			argsIdx:       map[string]*container.Container{},
 			ErrorHandling: flag.ExitOnError,
+			stdOut:        stdOut,
+			stdErr:        stdErr,
 		},
 	}
 }
@@ -99,7 +105,7 @@ In most cases the library users won't need to call this method, unless
 a more complex validation is needed.
 */
 func (cli *Cli) PrintVersion() {
-	fmt.Fprintln(stdErr, cli.version.version)
+	fmt.Fprintln(cli.stdErr, cli.version.version)
 }
 
 /*
@@ -138,8 +144,3 @@ func Exit(code int) {
 }
 
 var noop = func(code int) {}
-
-var (
-	stdOut io.Writer = os.Stdout
-	stdErr io.Writer = os.Stderr
-)
